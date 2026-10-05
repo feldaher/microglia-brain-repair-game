@@ -1,7 +1,7 @@
 // The labels that ride over the scene, and the card a label opens.
 
 import type { Game } from '../app/game';
-import { CARDS, CREDIT, PAPER_URL, type Card } from '../teach/cards';
+import { CARDS, CREDIT, PAPER_URL, type Card, type Figure } from '../teach/cards';
 
 const $ = <T extends HTMLElement = HTMLElement>(id: string) => document.getElementById(id) as T;
 
@@ -35,7 +35,18 @@ export class Labels {
   }
 
   show(card: Card): void {
+    this.fill(card.name, card.size, card.blurb, card.figure, card.colour);
     this.open = card;
+    $('card-kind').hidden = true;
+    for (const [id, b] of this.buttons) b.classList.toggle('pinned', id === card.id);
+  }
+
+  /** Fills and opens the card; also used for the stations. */
+  fill(name: string, size: string, blurb: string, figure: Figure, colour: string): void {
+    for (const b of this.buttons.values()) b.classList.remove('pinned');
+    const card = { name, size, blurb, figure, colour };
+    this.open = null;
+    $('card-kind').hidden = false;
     $('card').hidden = false;
     $('card').style.setProperty('--c', card.colour);
     $('card-name').textContent = card.name;
@@ -46,7 +57,6 @@ export class Labels {
     $<HTMLAnchorElement>('card-img-link').href = card.figure.src;
     $('card-cap').textContent = card.figure.caption;
     $('card-credit').innerHTML = `${card.figure.panel} of <a href="${PAPER_URL}" target="_blank" rel="noopener">${CREDIT}</a>`;
-    for (const [id, b] of this.buttons) b.classList.toggle('pinned', id === card.id);
   }
 
   close(): void {
@@ -59,9 +69,10 @@ export class Labels {
   update(game: Game, project: (x: number, y: number) => { x: number; y: number } | null): void {
     for (const card of CARDS) {
       const b = this.buttons.get(card.id)!;
-      const a = card.anchor(game), p = this.shown ? project(a.x, a.y) : null;
-      // "The pull" names the lines, which exist only while the visitor pulls.
-      b.hidden = !p || (card.id === 'pull' && !game.pulling);
+      const mine = card.id === 'you' || card.id === 'pull';
+      const a = mine && game.player < 0 ? null : card.anchor(game), p = this.shown && a ? project(a.x, a.y) : null;
+      // "The pull" names the lines, which exist only while the visitor pulls; no microglia, no "You".
+      b.hidden = !p || (card.id === 'pull' && !game.pulling) || (card.id === 'you' && game.player < 0);
       if (p) { b.style.left = `${p.x}px`; b.style.top = `${p.y}px`; }
     }
   }

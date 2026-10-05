@@ -2,7 +2,7 @@
 // cell, and how many microglia pull.
 
 import { Kind, type PlayerInput, type Tissue, type Vec3 } from '../contracts';
-import { WOUND, fig4aSeeds } from '../model/fig4a';
+import { FIG4A, WOUND, fig4aSeeds } from '../model/fig4a';
 import { openArea, repairIndex } from '../model/measure';
 import { MODEL } from '../model/params';
 import { rng } from '../model/random';
@@ -25,7 +25,7 @@ const MAX_STEPS = 40;
 export class Game {
   readonly params = MODEL;
   tissue: Tissue;
-  /** Index of the visitor's cell. */
+  /** Index of the visitor's cell; −1 in a tissue without microglia. */
   player: number;
   /** Point of the tissue plane the visitor is heading for, µm. */
   target: { x: number; y: number } | null = null;
@@ -33,9 +33,12 @@ export class Game {
   private owed = 0;
   private woundAtStart: number;
 
-  constructor(seed = 0) {
+  /** `microgliaCount` of the figure's 19 microglia are kept, chosen by the seed. */
+  constructor(seed = 0, microgliaCount = FIG4A.microglia.length) {
     this.rand = rng(seed);
-    this.tissue = createTissue(fig4aSeeds(MODEL.radius));
+    const pick = rng(seed + 1), kept = FIG4A.microglia.slice();
+    while (kept.length > microgliaCount) kept.splice(Math.floor(pick() * kept.length), 1);
+    this.tissue = createTissue(fig4aSeeds(MODEL.radius, kept));
     this.tissue.pulling.fill(0);
     const cx = (WOUND.x0 + WOUND.x1) / 2, cy = (WOUND.y0 + WOUND.y1) / 2;
     let best = -1, bestD = Infinity;
@@ -54,8 +57,8 @@ export class Game {
   }
 
   /** Whether the visitor's cell is pulling. */
-  get pulling(): boolean { return this.tissue.pulling[this.player] === 1; }
-  set pulling(on: boolean) { this.tissue.pulling[this.player] = on ? 1 : 0; }
+  get pulling(): boolean { return this.player >= 0 && this.tissue.pulling[this.player] === 1; }
+  set pulling(on: boolean) { if (this.player >= 0) this.tissue.pulling[this.player] = on ? 1 : 0; }
 
   /** Hours post-injury. */
   hpi(): number { return HPI_START + this.tissue.time / 60; }
@@ -74,6 +77,7 @@ export class Game {
   /** The idle microglia nearest the visitor's cell starts pulling. False when none is left. */
   call(): boolean {
     const p = this.tissue.pos, me = this.player;
+    if (me < 0) return false;
     let best = -1, bestD = Infinity;
     for (const i of this.microglia()) {
       if (i === me || this.tissue.pulling[i]) continue;
@@ -85,7 +89,8 @@ export class Game {
     return true;
   }
 
-  private input(): PlayerInput {
+  private input(): PlayerInput | undefined {
+    if (this.player < 0) return undefined;
     let heading: Vec3 | null = null;
     if (this.target) {
       const dx = this.target.x - this.tissue.pos[3 * this.player], dy = this.target.y - this.tissue.pos[3 * this.player + 1];

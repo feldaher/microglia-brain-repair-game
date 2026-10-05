@@ -343,3 +343,16 @@ body.no-gpu .title { pointer-events: auto; }
 body.no-gpu #labels, body.no-gpu .side-stack { display: none; }
 h1 { font-size: clamp(48px, 5.6vw, 84px); }
 .key { margin-top: 16px; }
+.stations { position: fixed; top: 22px; left: 50%; transform: translateX(-50%); display: flex; gap: 0; z-index: 4; border: 1px solid var(--line); background: color-mix(in srgb, var(--panel) 70%, transparent); backdrop-filter: blur(6px); -webkit-backdrop-filter: blur(6px); }
+.stations button { padding: 8px 13px 7px; background: none; border: 0; border-left: 1px solid var(--line); font: 500 10.5px/1 var(--mono); letter-spacing: 0.1em; text-transform: uppercase; color: var(--muted); cursor: pointer; }
+.stations button:first-child { border-left: 0; }
+.stations button:hover { color: var(--ink); }
+.stations button.here { background: var(--ink); color: var(--bg); }
+.stations button.soon::after { content: ' ·'; opacity: 0.6; }
+.seg.three { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 0; }
+.seg.three .tool { padding: 8px 4px; font-size: 12px; justify-content: center; }
+.seg.three .tool + .tool { border-left: 0; }
+.scalebar em { font: italic 12px var(--serif); color: var(--muted); margin-top: -2px; }
+.card .card-kind { margin-top: 8px; padding-top: 8px; border-top: 1px solid var(--line); font: 10.5px/1.45 var(--mono); color: var(--muted); }
+body.no-gpu .stations { display: none; }
+@media (max-width: 900px) { .stations { top: auto; bottom: 8px; } .stations button { padding: 7px 8px 6px; } }

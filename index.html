@@ -34,8 +34,16 @@
 
   <div class="status"><span class="dot"></span><span id="status-text">WebGPU · Starting</span></div>
 
+  <nav class="stations" id="stations" aria-label="The figures of the paper"></nav>
+
   <aside class="panel" id="panel">
     <div class="panel-head"><span class="label">The Tissue</span><span class="fig">fig. 4</span></div>
+
+    <div class="group">
+      <span class="label">The fish</span>
+      <div class="seg three" id="fish" role="radiogroup" aria-label="The fish"></div>
+      <p class="stage-blurb" id="fish-blurb"></p>
+    </div>
 
     <div class="group">
       <div class="slider-head"><span class="label">Time since the injury</span><output id="clock">4.0 h</output></div>
@@ -61,13 +69,13 @@
     <p class="help" id="help">Click the tissue and your yellow cell crawls there. Press Space to pull, and C to call another microglia.</p>
     <div class="stats three">
       <div><span class="label">Wound closed</span><b id="s-ri">0</b><i>% of the box</i></div>
-      <div><span class="label">Pulling</span><b id="s-pull">0</b><i>of 19 microglia</i></div>
+      <div><span class="label">Pulling</span><b id="s-pull">0</b><i id="s-of">of 19 microglia</i></div>
       <div><span class="label">Clock</span><b id="s-hpi">4.0</b><i>hours after injury</i></div>
     </div>
-    <p class="fine">The tissue moves by the computer model of El-Daher et al. 2024 (<a href="https://doi.org/10.26508/lsa.202403052" target="_blank" rel="noopener">Life Science Alliance</a>), with its published settings and the cell layout of its Fig. 4A. Each pulling microglia is tied to every other cell, however far, as if through the mesh of astrocyte fibres that fills the tissue. The skin does not give; being tied to it keeps the microglia out in the open space, over the wound. The model is a flat slice. Time runs <span id="fine-speed"></span> times faster than life. “Wound closed” is the share of the boxed region that neurons have covered; in the paper the wound was outlined by hand, so these numbers are not the paper's.</p>
+    <p class="fine">The tissue moves by the computer model of El-Daher et al. 2024 (<a href="https://doi.org/10.26508/lsa.202403052" target="_blank" rel="noopener">Life Science Alliance</a>), with its published settings and the cell layout of its Fig. 4A. Each pulling microglia is tied to every other cell, however far, as if through the mesh of astrocyte fibres that fills the tissue. The skin does not give; being tied to it keeps the microglia out in the open space, over the wound. The model is a flat slice, drawn about four times larger than the real tissue. Time runs <span id="fine-speed"></span> times faster than life. “Wound closed” is the share of the boxed region that neurons have covered; in the paper the wound was outlined by hand, so these numbers are not the paper's.</p>
   </section>
 
-  <div class="scalebar" id="scalebar" aria-label="Scale bar"><i></i><span>100 µm</span></div>
+  <div class="scalebar" id="scalebar" aria-label="Scale bar"><i></i><span>100 µm in the model</span><em>≈ 25 µm in the fish</em></div>
 
   <div class="side-stack">
     <aside class="card" id="card" hidden>
@@ -79,6 +87,7 @@
         <p class="card-credit" id="card-credit"></p>
       </figure>
       <p id="card-blurb"></p>
+      <p class="card-kind" id="card-kind" hidden></p>
     </aside>
   </div>
 

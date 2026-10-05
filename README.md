@@ -4,7 +4,11 @@ A playable version of the computer model in El-Daher et al. 2024, "Microglia are
 
 You are one microglia in a slice of injured zebrafish brain. Click to crawl, press Space to pull, press C to call other microglia. Twenty hours (4 to 24 hours after injury) pass in one minute, and a thin line follows each neuron from where it started. One cell barely moves the tissue; nineteen close the wound.
 
-This is Act 2 of a planned three-act piece. Design notes are in `../outputs/design/2026-10-05_architecture.md`.
+The piece is being built as seven stations, one per main figure of the paper. The strip at the top lists them; Fig 4 is the one that can be played so far, in three fish (wild type, KI20227-treated, irf8 mutant), and the others open a card with the finding and a panel of the figure. Labels in the scene open cards with the paper's numbers and images.
+
+Lengths are the model's: its tissue is about four times larger than the real one (see `../outputs/analysis/2026-10-05_port-against-fig1-fig3.md`).
+
+Design notes: `../outputs/design/2026-10-05_figure-by-figure.md` and `2026-10-05_architecture.md`.
 
 ## What is the paper's and what is ours
 
@@ -32,7 +36,7 @@ It needs a browser with WebGPU: current Chrome or Edge, Safari 18+, or Firefox w
 | Click or drag on the tissue | Your cell crawls there, at the model's 3 µm/min |
 | `Space` | Pull / let go |
 | `C` | Call the nearest idle microglia |
-| `P` · `R` · `?` | Pause · start again · the welcome screen |
+| `P` · `R` · `L` · `?` | Pause · start again · labels · the welcome screen |
 | Scroll | Zoom |
 
 ## How it is built

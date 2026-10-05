@@ -4,7 +4,9 @@ import { Game, SPEED_UP } from './app/game';
 import { COLOURS, View } from './app/view';
 import { invert, transformPoint } from './math/mat4';
 import { Scene, type Camera } from './render/scene';
+import { FISH, MODEL_KIND, STATIONS, type Fish } from './teach/stations';
 import { Labels } from './ui/labels';
+import { PAPER } from './teach/cards';
 import { initWelcome } from './ui/welcome';
 
 const $ = <T extends HTMLElement = HTMLElement>(id: string) => document.getElementById(id) as T;
@@ -31,7 +33,8 @@ async function main() {
   }
   scene.device.lost.then((info) => fail(`The GPU device was lost (${info.message || info.reason}). Reload the page to try again.`));
 
-  let game = new Game(Date.now() & 0xffff);
+  let fish: Fish = FISH[0];
+  let game = new Game(Date.now() & 0xffff, fish.microglia);
   let view = new View(game);
   let paused = true, shown = false;
   const labels = new Labels();
@@ -50,7 +53,7 @@ async function main() {
   };
   const call = () => { game.call(); };
   const restart = () => {
-    game = new Game(Date.now() & 0xffff);
+    game = new Game(Date.now() & 0xffff, fish.microglia);
     view = new View(game);
     shown = false;
     paused = false;
@@ -58,6 +61,38 @@ async function main() {
     $('pause').textContent = 'Pause';
   };
   const togglePause = () => { paused = !paused; $('pause').textContent = paused ? 'Resume' : 'Pause'; };
+  // ----- the fish of the Fig 4 station
+  const fishButtons = FISH.map((f) => {
+    const b = document.createElement('button');
+    b.className = 'tool';
+    b.setAttribute('role', 'radio');
+    b.textContent = f.name;
+    b.addEventListener('click', () => { chooseFish(f); restart(); });
+    $('fish').append(b);
+    return b;
+  });
+  function chooseFish(f: Fish) {
+    fish = f;
+    fishButtons.forEach((b, i) => { b.classList.toggle('active', FISH[i] === f); b.setAttribute('aria-checked', String(FISH[i] === f)); });
+    $('fish-blurb').textContent = f.blurb;
+    $('s-of').textContent = `of ${f.microglia} microglia`;
+    pullBtn.toggleAttribute('disabled', f.microglia === 0);
+  }
+  chooseFish(fish);
+
+  // ----- the strip of figures; a station that is not built yet opens its card
+  for (const s of STATIONS) {
+    const b = document.createElement('button');
+    b.textContent = `Fig ${s.fig}`;
+    b.title = s.title + (s.built ? '' : ' (not built yet)');
+    b.className = s.built ? 'here' : 'soon';
+    b.addEventListener('click', () => {
+      labels.fill(`Fig ${s.fig} · ${s.title}`, s.numbers, s.finding, s.figure, '#1d1b19');
+      $('card-kind').textContent = `${MODEL_KIND[s.model]}.${s.built ? '' : ' This station is not built yet: for now, the finding and the figure.'}`;
+    });
+    $('stations').append(b);
+  }
+
   pullBtn.addEventListener('click', () => setPulling(!game.pulling));
   callBtn.addEventListener('click', call);
   $('restart').addEventListener('click', restart);
@@ -119,9 +154,10 @@ async function main() {
     $('clock-bar').style.width = `${(100 * (hpi - 4)) / 20}%`;
     $('s-ri').textContent = String(Math.round(100 * game.repairIndex()));
     $('s-pull').textContent = String(n);
-    const idle = total - n - (game.pulling ? 0 : 1);
+    const idle = Math.max(0, total - n - (game.pulling ? 0 : 1));
     callBtn.disabled = idle === 0;
-    $('crew').textContent = n === 0 ? `Nobody is pulling. ${idle} microglia are idle.`
+    $('crew').textContent = total === 0 ? 'This fish has no microglia. Nothing pulls.'
+      : n === 0 ? `Nobody is pulling. ${idle} microglia are idle.`
       : n === 1 && game.pulling ? `You are pulling alone. ${idle} microglia are idle.`
       : `${n} microglia are pulling${game.pulling ? ', you among them' : ', but not you'}.`;
     // Scale bar: 100 µm at the centre of the tissue.
@@ -134,8 +170,14 @@ async function main() {
     shown = true;
     const ri = game.repairIndex(), n = game.pullingCount();
     $('result-title').textContent = ri > 0.5 ? 'Closed.' : ri > 0.2 ? 'Half shut.' : 'Still open.';
-    $('result-lead').textContent = `${Math.round(100 * ri)}% of the wound has closed, with ${n === 0 ? 'no microglia' : n === 1 ? 'one microglia' : `${n} microglia`} pulling at the end.`;
-    $('result-note').textContent = ri > 0.5
+    const share = Math.round(100 * ri) <= 0 ? 'None of the wound has closed' : `${Math.round(100 * ri)}% of the wound has closed`;
+    $('result-lead').textContent = fish.microglia === 0 ? `${share}, in a fish with no microglia.`
+      : `${share}, with ${n === 0 ? 'no microglia' : n === 1 ? 'one microglia' : `${n} microglia`} pulling at the end.`;
+    $('result-note').textContent = fish.id === 'irf8'
+      ? `With no microglia nothing in the model pulls, and the wound is as it was. In real irf8 mutants the wound closed in ${PAPER.closedWithoutMicroglia[0]} of ${PAPER.closedWithoutMicroglia[1]} fish, against ${PAPER.closedWildType[0]} of ${PAPER.closedWildType[1]} normal fish, and in 10 of the 17 it grew. The model cannot make a wound grow.`
+      : fish.id === 'ki20227'
+      ? 'In the model, a third of the microglia close about a third as much of the wound. In real fish treated with KI20227 the wound also closed less than in untreated ones.'
+      : ri > 0.5
       ? 'This is what the paper found in living fish: microglia gather at the wound within six hours and it is shut within a day. Fish without microglia, or with microglia that cannot grip, are left with an open wound.'
       : 'A wound closes only when enough microglia pull for long enough. Fish that lack microglia are left with an open wound, and in most of them it grows. Start again, and call the others early.';
     result.showModal();
