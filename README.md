@@ -4,7 +4,13 @@ A playable version of the computer model in El-Daher et al. 2024, "Microglia are
 
 You are one microglia in a slice of injured zebrafish brain. Click to crawl, press Space to pull, press C to call other microglia. Twenty hours (4 to 24 hours after injury) pass in one minute, and a thin line follows each neuron from where it started. One cell barely moves the tissue; nineteen close the wound.
 
-The piece is being built as seven stations, one per main figure of the paper. The strip at the top lists them; Fig 4 is the one that can be played so far, in three fish (wild type, KI20227-treated, irf8 mutant), and the others open a card with the finding and a panel of the figure. Labels in the scene open cards with the paper's numbers and images.
+The piece is being built as seven stations, one per main figure of the paper. The strip at the top lists them. Three are built:
+
+- **Fig 1**: the paper's simulation beside the real time-lapse, in step. Click neurons to follow them; their displacement exponent is shown beside the 1.86 measured in fish, and the model's closure curve beside the measured one.
+- **Fig 3**: the microglia are hidden. Mark where the neurons' tracks are heading, then reveal who is there. The timing of gathering and closure is plotted against Fig 3I.
+- **Fig 4**: be a microglia in one of three fish (wild type, KI20227-treated, irf8 mutant).
+
+The other four open a card with the finding and a panel of the figure. Labels in the scene open cards with the paper's numbers and images.
 
 Lengths are the model's: its tissue is about four times larger than the real one (see `../outputs/analysis/2026-10-05_port-against-fig1-fig3.md`).
 
@@ -43,7 +49,8 @@ It needs a browser with WebGPU: current Chrome or Edge, Safari 18+, or Firefox w
 
 - `src/contracts.ts`: the types every layer agrees on. Units are µm and minutes.
 - `src/model/`: the model, with no rendering in it. `step.ts` is one mechanics step; `params.ts` the constants with their sources; `fig4a.ts` the layout as lattice indices; `measure.ts` the wound area and repair index.
-- `src/app/game.ts`: the run as a state machine (clock, the visitor's cell, who pulls). `src/app/view.ts` turns it into spheres and lines.
+- `src/app/game.ts`: the run as a state machine (clock, the visitor's cell, who pulls). `record.ts` keeps a frame every 15 minutes and makes the measurements of Figs 1 and 3 on it; `replay.ts` plays and scrubs it. `view.ts` turns a run into spheres and lines.
+- `src/stations/`: one module per figure. `src/teach/`: the cards, the stations' texts and the curves read off the paper's figures. `src/ui/plot.ts`: the line chart.
 - `src/render/scene.ts`: WebGPU. Instanced spheres, their shadows, and lines for the traction web and the wound box.
 - `features/*.feature` specify the behaviour; `tests/` run them.
 

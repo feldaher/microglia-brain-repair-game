@@ -25,7 +25,7 @@ export interface Station {
 
 export const STATIONS: Station[] = [
   {
-    fig: 1, title: 'The wound closes in a day', model: 'paper', built: false,
+    fig: 1, title: 'The wound closes in a day', model: 'paper', built: true,
     numbers: `closed ${PAPER.closedBetweenHpi[0]}–${PAPER.closedBetweenHpi[1]} h after injury · 11 larvae`,
     finding: 'A pin wound through the brain of a zebrafish larva is shut within a day. No new cells fill it. The neurons that were already there are moved, all together and in straight lines.',
     figure: { src: 'figures/fig1b-wound-closing.jpg', panel: 'Fig 1B', caption: 'One wound (arrow) filmed in a living larva from 4 to 18 hours after injury. Scale bar 50 µm.' },
@@ -37,7 +37,7 @@ export const STATIONS: Station[] = [
     figure: { src: 'figures/fig2g-spring.jpg', panel: 'Fig 2F, G', caption: 'A neuron on a spring in a viscous medium, and the closing of one wound (dots) fitted by that model (red).' },
   },
   {
-    fig: 3, title: 'Microglia get there first', model: 'paper', built: false,
+    fig: 3, title: 'Microglia get there first', model: 'paper', built: true,
     numbers: `at the wound from ${PAPER.arriveHpi} h · gathered by ${PAPER.gatheredHpi} h · 308 cells mapped in 15 larvae`,
     finding: 'The neurons all move toward one spot, and that spot is where the microglia, the brain\'s immune cells, have gathered. They are all there six hours after the injury. Only then does the wound begin to close.',
     figure: { src: 'figures/fig3i-timing.jpg', panel: 'Fig 3I', caption: 'Microglia gathering at the wound (squares) and the wound closing (dots), against time after injury.' },

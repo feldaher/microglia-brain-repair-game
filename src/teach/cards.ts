@@ -9,6 +9,8 @@ import { FIG4A, WOUND } from '../model/fig4a';
 export const PAPER = {
   /** Hours post-injury between which the wound is closed, n = 11 larvae (p. 2, Fig 1D). */
   closedBetweenHpi: [18, 22],
+  /** Exponent of the neurons' mean-squared displacement, 4 to 20 hpi (p. 2, Fig 1L). */
+  msdExponent: 1.86,
   /** Age of the larvae at injury, days post-fertilisation (p. 2). */
   ageDpf: 4,
   /** Microglia are recruited from 2 hpi and fully gathered by 6 hpi (p. 4–6, Fig 3G, 3I). */

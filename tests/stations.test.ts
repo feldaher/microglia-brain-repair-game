@@ -31,6 +31,9 @@ describeFeature(feature, ({ Scenario }) => {
   Scenario('The Fig 4 station can be played', ({ Given, Then, And }) => {
     Given('the stations', () => undefined);
     Then('Fig 4 is built', () => { expect(STATIONS[3].built).toBe(true); });
+    And('so are Fig 1 and Fig 3, where the visitor watches and measures', () => {
+      expect(STATIONS.filter((s) => s.built).map((s) => s.fig)).toEqual([1, 3, 4]);
+    });
     And('it offers three fish: wild type, treated with KI20227, and the irf8 mutant', () => {
       expect(FISH.map((f) => f.id)).toEqual(['wild-type', 'ki20227', 'irf8']);
     });

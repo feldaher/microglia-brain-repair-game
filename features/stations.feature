@@ -11,6 +11,7 @@ Feature: One station for each figure of the paper
   Scenario: The Fig 4 station can be played
     Given the stations
     Then Fig 4 is built
+    And so are Fig 1 and Fig 3, where the visitor watches and measures
     And it offers three fish: wild type, treated with KI20227, and the irf8 mutant
 
   Scenario: Each fish has the microglia the paper found in it
