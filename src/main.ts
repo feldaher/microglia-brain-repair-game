@@ -4,6 +4,7 @@ import { Game, SPEED_UP } from './app/game';
 import { COLOURS, View } from './app/view';
 import { invert, transformPoint } from './math/mat4';
 import { Scene, type Camera } from './render/scene';
+import { Labels } from './ui/labels';
 import { initWelcome } from './ui/welcome';
 
 const $ = <T extends HTMLElement = HTMLElement>(id: string) => document.getElementById(id) as T;
@@ -33,6 +34,7 @@ async function main() {
   let game = new Game(Date.now() & 0xffff);
   let view = new View(game);
   let paused = true, shown = false;
+  const labels = new Labels();
   const cam: Camera = { target: [-40, 0, 20], dist: 2100, yaw: 0, pitch: 1.02 };
   /** Distance the visitor has zoomed to, before the fit to the window. */
   let zoom = 1;
@@ -69,6 +71,8 @@ async function main() {
     else if (e.key === 'c' || e.key === 'C') call();
     else if (e.key === 'r' || e.key === 'R') restart();
     else if (e.key === 'p' || e.key === 'P') togglePause();
+    else if (e.key === 'l' || e.key === 'L') labels.toggle();
+    else if (e.key === 'Escape') labels.close();
     else if (e.key === '?') welcome.showModal();
   });
 
@@ -145,6 +149,11 @@ async function main() {
     if (!paused && !welcome.open && !result.open) game.advance(dt);
     view.update(game, now / 1000);
     scene.render(cam, view.spheres, view.sphereCount, view.lines, view.lineVerts, ground);
+    const vp = scene.viewProj(cam), w = canvas.clientWidth, h = canvas.clientHeight;
+    labels.update(game, (x, y) => {
+      const c = transformPoint(vp, [x, game.params.radius, -y]);
+      return { x: (0.5 + 0.5 * c[0]) * w, y: (0.5 - 0.5 * c[1]) * h };
+    });
     if (frame++ % 6 === 0) readouts();
     if (game.done && !shown) finish();
     requestAnimationFrame(tick);

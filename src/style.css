@@ -333,3 +333,13 @@ li.key-item:hover { background: none; color: var(--muted); }
 .fallback .card-credit { font-size: 12px; color: var(--faint); }
 body.no-gpu .panel, body.no-gpu .readout, body.no-gpu .scalebar, body.no-gpu .key, body.no-gpu .tagline, body.no-gpu h1 { display: none; }
 body.no-gpu .title { pointer-events: auto; }
+.lbl { cursor: pointer; padding: 3px 7px 3px 6px; transform: translate(10px, -50%); }
+.card { border-left-color: var(--c, var(--ink)); }
+.result-fig { display: grid; grid-template-columns: 190px 1fr; gap: 14px; align-items: start; margin: 16px 0 0; }
+.result-fig img { width: 100%; display: block; border: 1px solid var(--line); }
+.result-fig figcaption { font-size: 12.5px; line-height: 1.5; color: color-mix(in srgb, var(--ink) 80%, var(--bg)); }
+.result-fig .card-credit { display: block; margin-top: 4px; font: 10px/1.4 var(--mono); color: var(--faint); }
+@media (max-width: 560px) { .result-fig { grid-template-columns: 1fr; } }
+body.no-gpu #labels, body.no-gpu .side-stack { display: none; }
+h1 { font-size: clamp(48px, 5.6vw, 84px); }
+.key { margin-top: 16px; }

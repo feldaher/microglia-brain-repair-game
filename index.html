@@ -12,6 +12,7 @@
 </head>
 <body>
   <canvas id="stage" aria-label="A slice of injured brain tissue. Your cell is the yellow one."></canvas>
+  <div id="labels" aria-label="Labels"></div>
 
   <header class="title">
     <p class="eyebrow">Paper Studies / El-Daher et al. 2024 <button id="welcome-open" class="about" aria-haspopup="dialog" title="What is this? (?)">About</button></p>
@@ -52,6 +53,7 @@
 
     <div class="group">
       <div class="row"><button id="pause" class="btn grow" title="Pause (P)">Pause</button><button id="restart" class="btn grow" title="Start again (R)">Start again</button></div>
+      <div class="row"><button id="labels-btn" class="btn grow toggle on" aria-pressed="true" title="Labels (L)"><span class="switch"></span>Labels</button></div>
     </div>
   </aside>
 
@@ -62,16 +64,33 @@
       <div><span class="label">Pulling</span><b id="s-pull">0</b><i>of 19 microglia</i></div>
       <div><span class="label">Clock</span><b id="s-hpi">4.0</b><i>hours after injury</i></div>
     </div>
-    <p class="fine">The tissue moves by the computer model of El-Daher et al. 2024 (<a href="https://doi.org/10.26508/lsa.202403052" target="_blank" rel="noopener">Life Science Alliance</a>), with its published settings and the cell layout of its Fig. 4A. Each pulling microglia is tied to every other cell, however far, as if through the mesh of astrocyte fibres that fills the tissue. The skin does not give, so the microglia brace against it and the neurons are drawn in. The model is a flat slice. Time runs <span id="fine-speed"></span> times faster than life. “Wound closed” is the share of the boxed region that neurons have covered; in the paper the wound was outlined by hand, so these numbers are not the paper's.</p>
+    <p class="fine">The tissue moves by the computer model of El-Daher et al. 2024 (<a href="https://doi.org/10.26508/lsa.202403052" target="_blank" rel="noopener">Life Science Alliance</a>), with its published settings and the cell layout of its Fig. 4A. Each pulling microglia is tied to every other cell, however far, as if through the mesh of astrocyte fibres that fills the tissue. The skin does not give; being tied to it keeps the microglia out in the open space, over the wound. The model is a flat slice. Time runs <span id="fine-speed"></span> times faster than life. “Wound closed” is the share of the boxed region that neurons have covered; in the paper the wound was outlined by hand, so these numbers are not the paper's.</p>
   </section>
 
   <div class="scalebar" id="scalebar" aria-label="Scale bar"><i></i><span>100 µm</span></div>
+
+  <div class="side-stack">
+    <aside class="card" id="card" hidden>
+      <div class="card-head"><h2 id="card-name"></h2><button id="card-close" class="x" aria-label="Close">×</button></div>
+      <p class="card-size" id="card-size"></p>
+      <figure class="card-fig">
+        <a id="card-img-link" target="_blank" rel="noopener"><img id="card-img" alt="" loading="lazy" decoding="async" /></a>
+        <figcaption id="card-cap"></figcaption>
+        <p class="card-credit" id="card-credit"></p>
+      </figure>
+      <p id="card-blurb"></p>
+    </aside>
+  </div>
 
   <dialog class="welcome" id="result" aria-labelledby="result-title">
     <p class="eyebrow">24 hours after the injury</p>
     <h2 id="result-title"></h2>
     <p class="welcome-lead" id="result-lead"></p>
     <p class="result-note" id="result-note"></p>
+    <figure class="result-fig">
+      <img src="figures/fig4c-irf8.jpg" alt="" loading="lazy" decoding="async" />
+      <figcaption>Real fish, just after the injury and a day later. With microglia (left) the wound has all but gone; in a mutant without microglia (right) it is still open. Dashed lines mark the wound. <span class="card-credit">Fig 4C of El-Daher et al. 2024, CC BY 4.0.</span></figcaption>
+    </figure>
     <div class="welcome-foot"><button id="result-again" class="welcome-start" autofocus>Start again</button><span><a href="https://doi.org/10.26508/lsa.202403052" target="_blank" rel="noopener">Read the paper</a></span></div>
   </dialog>
 
@@ -83,7 +102,7 @@
       <li><b>Crawl</b>Click the tissue and your yellow cell goes there.</li>
       <li><b>Pull</b>Press Space to hold on. The tissue creeps toward you.</li>
       <li><b>Call</b>Press C to bring in another microglia. One is not enough.</li>
-      <li><b>Watch</b>Twenty hours pass in a minute. Thin lines show how far each neuron has moved.</li>
+      <li><b>Look</b>Twenty hours pass in a minute. Click a label for the real thing.</li>
     </ul>
     <div class="welcome-foot"><button id="welcome-start" class="welcome-start" autofocus>Start pulling</button><span>The tissue moves by the model from the paper.</span></div>
   </dialog>
