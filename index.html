@@ -1,0 +1,110 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
+  <title>Close the Wound — microglia pull a brain wound shut</title>
+  <meta name="description" content="Be one of the brain's immune cells and pull a wound closed. A playable version of the computer model in El-Daher et al. 2024, where microglia close a brain wound in zebrafish larvae by pulling on the tissue." />
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Newsreader:ital,opsz,wght@0,6..72,400;1,6..72,400;1,6..72,500&family=IBM+Plex+Mono:wght@400;500&family=Inter:wght@400;500&display=swap" rel="stylesheet" />
+  <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Ccircle cx='10' cy='20' r='7' fill='%23d98a72'/%3E%3Ccircle cx='22' cy='11' r='7' fill='%23e0a52c'/%3E%3C/svg%3E" />
+</head>
+<body>
+  <canvas id="stage" aria-label="A slice of injured brain tissue. Your cell is the yellow one."></canvas>
+
+  <header class="title">
+    <p class="eyebrow">Paper Studies / El-Daher et al. 2024 <button id="welcome-open" class="about" aria-haspopup="dialog" title="What is this? (?)">About</button></p>
+    <h1><span>Close</span><span class="indent">the Wound.</span></h1>
+    <p class="tagline">A needle went through a young brain.<br />You are one of its immune cells.<br />Pull.</p>
+    <div class="key">
+      <div class="key-head"><span class="label">Key</span></div>
+      <ul id="legend">
+        <li class="key-item"><i style="--c:#e0a52c"></i>You, a microglia</li>
+        <li class="key-item"><i style="--c:#d98a72"></i>Neurons</li>
+        <li class="key-item"><i style="--c:#2f8f80"></i>Microglia, pulling</li>
+        <li class="key-item"><i style="--c:#8d8478"></i>Skin</li>
+        <li class="key-item"><i style="--c:#9cc4bd"></i>Microglia, idle</li>
+        <li class="key-item"><i class="box"></i>The wound</li>
+        <li class="key-item"><i class="track"></i>A neuron's path</li>
+      </ul>
+    </div>
+  </header>
+
+  <div class="status"><span class="dot"></span><span id="status-text">WebGPU · Starting</span></div>
+
+  <aside class="panel" id="panel">
+    <div class="panel-head"><span class="label">The Tissue</span><span class="fig">fig. 4</span></div>
+
+    <div class="group">
+      <div class="slider-head"><span class="label">Time since the injury</span><output id="clock">4.0 h</output></div>
+      <div class="bar" aria-hidden="true"><i id="clock-bar"></i></div>
+      <div class="ends"><em>4 h</em><em id="speed"></em><em>24 h</em></div>
+    </div>
+
+    <div class="group">
+      <button id="pull" class="btn toggle" aria-pressed="false" title="Pull (Space)"><span class="switch"></span>Pull</button>
+      <div class="row">
+        <button id="call" class="btn grow" title="Call another microglia (C)">Call another microglia</button>
+      </div>
+      <p class="stage-blurb" id="crew">You are alone. 18 microglia are idle.</p>
+    </div>
+
+    <div class="group">
+      <div class="row"><button id="pause" class="btn grow" title="Pause (P)">Pause</button><button id="restart" class="btn grow" title="Start again (R)">Start again</button></div>
+    </div>
+  </aside>
+
+  <section class="readout">
+    <p class="help" id="help">Click the tissue and your yellow cell crawls there. Press Space to pull, and C to call another microglia.</p>
+    <div class="stats three">
+      <div><span class="label">Wound closed</span><b id="s-ri">0</b><i>% of the box</i></div>
+      <div><span class="label">Pulling</span><b id="s-pull">0</b><i>of 19 microglia</i></div>
+      <div><span class="label">Clock</span><b id="s-hpi">4.0</b><i>hours after injury</i></div>
+    </div>
+    <p class="fine">The tissue moves by the computer model of El-Daher et al. 2024 (<a href="https://doi.org/10.26508/lsa.202403052" target="_blank" rel="noopener">Life Science Alliance</a>), with its published settings and the cell layout of its Fig. 4A. Each pulling microglia is tied to every other cell, however far, as if through the mesh of astrocyte fibres that fills the tissue. The skin does not give, so the microglia brace against it and the neurons are drawn in. The model is a flat slice. Time runs <span id="fine-speed"></span> times faster than life. “Wound closed” is the share of the boxed region that neurons have covered; in the paper the wound was outlined by hand, so these numbers are not the paper's.</p>
+  </section>
+
+  <div class="scalebar" id="scalebar" aria-label="Scale bar"><i></i><span>100 µm</span></div>
+
+  <dialog class="welcome" id="result" aria-labelledby="result-title">
+    <p class="eyebrow">24 hours after the injury</p>
+    <h2 id="result-title"></h2>
+    <p class="welcome-lead" id="result-lead"></p>
+    <p class="result-note" id="result-note"></p>
+    <div class="welcome-foot"><button id="result-again" class="welcome-start" autofocus>Start again</button><span><a href="https://doi.org/10.26508/lsa.202403052" target="_blank" rel="noopener">Read the paper</a></span></div>
+  </dialog>
+
+  <dialog class="welcome" id="welcome" aria-labelledby="welcome-title">
+    <p class="eyebrow">Paper Studies / El-Daher et al. 2024</p>
+    <h2 id="welcome-title">Close the Wound.</h2>
+    <p class="welcome-lead">A needle has gone through the brain of a young zebrafish. In a day the wound will be shut: not by new cells, but by the brain's immune cells, the microglia, pulling the tissue together. You are one of them.</p>
+    <ul class="welcome-do">
+      <li><b>Crawl</b>Click the tissue and your yellow cell goes there.</li>
+      <li><b>Pull</b>Press Space to hold on. The tissue creeps toward you.</li>
+      <li><b>Call</b>Press C to bring in another microglia. One is not enough.</li>
+      <li><b>Watch</b>Twenty hours pass in a minute. Thin lines show how far each neuron has moved.</li>
+    </ul>
+    <div class="welcome-foot"><button id="welcome-start" class="welcome-start" autofocus>Start pulling</button><span>The tissue moves by the model from the paper.</span></div>
+  </dialog>
+
+  <div class="fallback" id="fallback" hidden>
+    <h2>This piece needs WebGPU.</h2>
+    <p id="fallback-msg">Try a recent Chrome, Edge or Safari (18+), or Firefox with WebGPU enabled.</p>
+    <p>Meanwhile, here is what it is about: within a day of an injury, a wound in a zebrafish larva's brain closes, and a computer model in which immune cells pull on the tissue does the same.</p>
+    <div class="fallback-videos">
+      <figure>
+        <video src="video/video1-wound-closure.mov" controls loop muted playsinline preload="metadata"></video>
+        <figcaption>A real wound closing, 4 to 22 hours after injury. Each dot is a cell nucleus; the coloured tracks follow single neurons. One frame every 15 minutes.</figcaption>
+      </figure>
+      <figure>
+        <video src="video/video3-simulation.mov" controls loop muted playsinline preload="metadata"></video>
+        <figcaption>The model. Blue: microglia. Red: neurons. Black: skin.</figcaption>
+      </figure>
+    </div>
+    <p class="card-credit">Videos 1 and 3 of El-Daher et al. 2024, <a href="https://doi.org/10.26508/lsa.202403052" target="_blank" rel="noopener">Life Science Alliance 8:e202403052</a>, CC BY 4.0.</p>
+  </div>
+
+  <script type="module" src="/src/main.ts"></script>
+</body>
+</html>
