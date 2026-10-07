@@ -1,6 +1,7 @@
 // Fig 3: the neurons all head for one spot, and the microglia are already there.
 // The microglia are hidden until the visitor has said where the tracks point.
 
+import type { Vec3 } from '../contracts';
 import { SPEED_UP } from '../app/game';
 import type { Point } from '../app/record';
 import { COLOURS } from '../app/view';
@@ -12,6 +13,9 @@ import { Watch } from './watch';
 
 export class Fig3 extends Watch implements Station {
   fig = 3;
+  extent = 1150;
+  centre: Vec3 = [-40, 0, 20];
+  scale = { length: 100, label: '100 µm in the model', note: '≈ 25 µm in the fish' };
   tagline = ['Every neuron is heading somewhere.', 'Find the spot.', 'Then see who is there.'];
   help = 'Watch the lines the neurons leave. Click where you think they are all heading, then press Reveal.';
   fine = `The paper's computer model, with its microglia hidden until you reveal them. Time runs ${Math.round(SPEED_UP)} times faster than life and lengths are the model's, about four times the real ones. In the model each neuron is drawn straight toward the middle of the microglia, so the two spots coincide by construction; in fish they were found near each other, which is the evidence. “Gathered” is how far the microglia's scatter has fallen, our measure; the paper counted microglia at the wound.`;

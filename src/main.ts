@@ -7,6 +7,7 @@ import { Scene, type Camera } from './render/scene';
 import { Fig1 } from './stations/fig1';
 import { Fig3 } from './stations/fig3';
 import { Fig4 } from './stations/fig4';
+import { Tissue3d } from './stations/tissue3d';
 import { $, type Stage, type Station } from './stations/stage';
 import { MODEL_KIND, STATIONS } from './teach/stations';
 import { Labels } from './ui/labels';
@@ -37,12 +38,15 @@ async function main() {
 
   const cam: Camera = { target: [-40, 0, 20], dist: 2100, yaw: 0, pitch: 1.02 };
   const labels = new Labels();
+  /** How far the visitor has zoomed, before the fit to the window. */
+  let zoom = 1;
   let started = false;
   const welcome = initWelcome(() => { started = true; });
   const stage: Stage = { scene, cam, labels, ground, held: () => !started || welcome.open };
 
   // ----- the stations; one is on screen at a time
-  const built = new Map<number, Station>([[1, new Fig1(stage)], [3, new Fig3(stage)], [4, new Fig4(stage)]]);
+  // 0 is the preview of the 3D tissue, which the figures will move onto.
+  const built = new Map<number, Station>([[0, new Tissue3d(stage)], [1, new Fig1(stage)], [3, new Fig3(stage)], [4, new Fig4(stage)]]);
   let station: Station = built.get(4)!;
   const buttons = new Map<number, HTMLButtonElement>();
   function show(next: Station) {
@@ -51,12 +55,16 @@ async function main() {
     labels.close();
     for (const el of document.querySelectorAll<HTMLElement>('[data-fig]')) el.hidden = !el.dataset.fig!.split(' ').includes(String(next.fig));
     for (const [fig, b] of buttons) b.classList.toggle('here', fig === next.fig);
-    $('fig-n').textContent = `fig. ${next.fig}`;
+    $('fig-n').textContent = next.fig ? `fig. ${next.fig}` : 'preview';
     $('tagline').innerHTML = next.tagline.join('<br />');
     $('help').textContent = next.help;
     $('fine').textContent = next.fine;
+    $('scale-label').textContent = next.scale.label;
+    $('scale-note').textContent = next.scale.note;
+    cam.yaw = 0; cam.pitch = next.orbit ? 0.9 : 1.02;
+    fit();
     next.enter();
-    try { history.replaceState(null, '', `#fig${next.fig}`); } catch { /* a sandboxed page: no address to keep */ }
+    try { history.replaceState(null, '', next.fig ? `#fig${next.fig}` : '#tissue'); } catch { /* a sandboxed page: no address to keep */ }
   }
   for (const s of STATIONS) {
     const b = document.createElement('button'), mine = built.get(s.fig);
@@ -71,7 +79,15 @@ async function main() {
     $('stations').append(b);
     buttons.set(s.fig, b);
   }
-  show(built.get(Number(/^#fig(\d)$/.exec(location.hash)?.[1])) ?? station);
+  // The preview of the 3D tissue has its own button, at the end of the strip.
+  const preview = document.createElement('button');
+  preview.textContent = '3D tissue';
+  preview.title = 'A preview of the tissue the figures will move onto';
+  preview.addEventListener('click', () => show(built.get(0)!));
+  $('stations').append(preview);
+  buttons.set(0, preview);
+
+  show(location.hash === '#tissue' ? built.get(0)! : built.get(Number(/^#fig(\d)$/.exec(location.hash)?.[1]) || 4) ?? station);
 
   window.addEventListener('keydown', (e) => {
     if (welcome.open || e.metaKey || e.ctrlKey) return;
@@ -87,29 +103,36 @@ async function main() {
     const inv = invert(scene.viewProj(cam));
     const nx = (2 * (e.clientX - rect.left)) / rect.width - 1, ny = 1 - (2 * (e.clientY - rect.top)) / rect.height;
     const a = transformPoint(inv, [nx, ny, 0]), b = transformPoint(inv, [nx, ny, 1]);
-    const h = station.game().params.radius, t = (h - a[1]) / (b[1] - a[1]);
+    const h = station.game()?.params.radius ?? 0, t = (h - a[1]) / (b[1] - a[1]);
     return t > 0 ? { x: a[0] + t * (b[0] - a[0]), y: -(a[2] + t * (b[2] - a[2])) } : null;
   };
   let dragging = false;
   const point = (e: PointerEvent) => { const p = pointAt(e); if (p) station.point(p); };
-  canvas.addEventListener('pointerdown', (e) => { dragging = true; canvas.setPointerCapture(e.pointerId); point(e); });
-  // Dragging steers a cell (Fig 4); elsewhere a press picks one thing, so only the press counts.
-  canvas.addEventListener('pointermove', (e) => { if (dragging && station.fig === 4) point(e); });
+  let lastX = 0, lastY = 0;
+  canvas.addEventListener('pointerdown', (e) => { dragging = true; lastX = e.clientX; lastY = e.clientY; canvas.setPointerCapture(e.pointerId); if (!station.orbit) point(e); });
+  // Dragging turns the 3D tissue, steers a cell in Fig 4; elsewhere a press picks one thing, so only the press counts.
+  canvas.addEventListener('pointermove', (e) => {
+    if (!dragging) return;
+    if (station.orbit) {
+      cam.yaw -= (e.clientX - lastX) * 0.006;
+      cam.pitch = Math.min(1.5, Math.max(0.05, cam.pitch + (e.clientY - lastY) * 0.006));
+      lastX = e.clientX; lastY = e.clientY;
+    } else if (station.fig === 4) point(e);
+  });
   canvas.addEventListener('pointerup', () => { dragging = false; });
   canvas.addEventListener('pointercancel', () => { dragging = false; });
 
   // ----- framing: the tissue sits in the part of the window the text leaves free
-  let zoom = 1;
   function fit() {
     const w = canvas.clientWidth, h = canvas.clientHeight, wide = w > 900;
     // Free area: right of the title column and left of the panel on a wide window; the top 55% on a narrow one.
     const left = wide ? Math.min(470, 0.33 * w) : 0, right = wide ? 290 : 0, bottom = wide ? 0 : 0.45 * h;
     const freeW = w - left - right, freeH = h - bottom;
-    // The tissue is about 1000 µm across; the view is 32° tall.
-    const perPixel = 1150 / Math.min(freeW, 1.15 * freeH);
+    // µm of specimen per pixel so that it fits the free area; the view is 32° tall.
+    const perPixel = station.extent / Math.min(freeW, 1.15 * freeH);
     cam.dist = zoom * (perPixel * h) / (2 * Math.tan((16 * Math.PI) / 180));
     const shift = (left - right) / 2, lift = bottom / 2;
-    cam.target = [-40 - shift * perPixel * zoom, 0, 20 + lift * perPixel * zoom / Math.sin(cam.pitch)];
+    cam.target = [station.centre[0] - shift * perPixel * zoom, station.centre[1], station.centre[2] + lift * perPixel * zoom / Math.sin(cam.pitch)];
   }
   canvas.addEventListener('wheel', (e) => {
     e.preventDefault();
@@ -126,13 +149,15 @@ async function main() {
     last = now;
     station.frame(dt, now / 1000);
     const vp = scene.viewProj(cam), w = canvas.clientWidth, h = canvas.clientHeight, game = station.game();
-    labels.update(game, (x, y) => {
+    if (game) labels.update(game, (x, y) => {
       const c = transformPoint(vp, [x, game.params.radius, -y]);
       return { x: (0.5 + 0.5 * c[0]) * w, y: (0.5 - 0.5 * c[1]) * h };
     });
+    $('labels').hidden = !game;
     if (frame++ % 30 === 0) {
-      // Scale bar: 100 model µm at the centre of the tissue.
-      const a = transformPoint(vp, [-90, 0, 20]), b = transformPoint(vp, [10, 0, 20]);
+      // Scale bar: its length, measured at the centre of the specimen, across the view.
+      const c0 = station.centre, half = station.scale.length / 2, cy = Math.cos(cam.yaw), sy = Math.sin(cam.yaw);
+      const a = transformPoint(vp, [c0[0] - half * cy, c0[1], c0[2] + half * sy]), b = transformPoint(vp, [c0[0] + half * cy, c0[1], c0[2] - half * sy]);
       ($('scalebar').firstElementChild as HTMLElement).style.width = `${(Math.abs(b[0] - a[0]) * w) / 2}px`;
     }
     requestAnimationFrame(tick);

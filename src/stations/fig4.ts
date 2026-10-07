@@ -1,6 +1,7 @@
 // Fig 4: no microglia, no closure. The visitor is a microglia in one of three fish.
 
 import { Game, SPEED_UP } from '../app/game';
+import type { Vec3 } from '../contracts';
 import type { Point } from '../app/record';
 import { View } from '../app/view';
 import { PAPER } from '../teach/cards';
@@ -9,6 +10,9 @@ import { $, type Stage, type Station } from './stage';
 
 export class Fig4 implements Station {
   fig = 4;
+  extent = 1150;
+  centre: Vec3 = [-40, 0, 20];
+  scale = { length: 100, label: '100 µm in the model', note: '≈ 25 µm in the fish' };
   tagline = ['A needle went through a young brain.', 'You are one of its immune cells.', 'Pull.'];
   help = 'Click the tissue and your yellow cell crawls there. Press Space to pull, and C to call another microglia.';
   fine = `The tissue moves by the computer model of El-Daher et al. 2024, with its published settings and the cell layout of its Fig. 4A. Each pulling microglia is tied to every other cell, however far, as if through the mesh of astrocyte fibres that fills the tissue. The skin does not give; being tied to it keeps the microglia out in the open space, over the wound. The model is a flat slice, drawn about four times larger than the real tissue. Time runs ${Math.round(SPEED_UP)} times faster than life. “Wound closed” is the share of the boxed region that neurons have covered; in the paper the wound was outlined by hand, so these numbers are not the paper's.`;

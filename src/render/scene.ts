@@ -41,6 +41,11 @@ struct SphereOut { @builtin(position) clip: vec4f, @location(0) normal: vec3f, @
   // A jelly-like body: light wraps around it, the edge picks up the ground colour, a wet highlight on top.
   var c = i.colour.rgb * (0.42 + 0.58 * wrap * wrap);
   c = mix(c, frame.ground.rgb, 0.28 * rim) + vec3f(0.5 * spec) + i.colour.rgb * i.colour.a * (0.25 + 0.5 * rim);
+  if (frame.ground.a > 0.5) {
+    // Fluorescence: the body shines by itself, a little brighter face-on, and fades with depth into the dark.
+    let depth = clamp((length(frame.eye.xyz - i.world) - frame.light.a) / frame.eye.a, 0.0, 1.0);
+    c = i.colour.rgb * (0.55 + 0.45 * wrap) * (1.0 + i.colour.a) * mix(1.0, 0.3, depth);
+  }
   return vec4f(c, 1.0);
 }
 
@@ -207,14 +212,22 @@ export class Scene {
     return this.device.createBuffer({ size: Math.max(bytes, 1024), usage: GPUBufferUsage.VERTEX | GPUBufferUsage.COPY_DST });
   }
 
-  /** Draws one frame. `ground` is the page colour, rgb in 0–1. */
-  render(cam: Camera, spheres: Float32Array, sphereCount: number, lines: Float32Array, lineVerts: number, ground: Vec3): void {
+  /**
+   * Draws one frame. `ground` is the page colour, rgb in 0–1. With `fluorescence`, bodies glow on a
+   * dark field and cast no shadow: `depth` is the thickness of the specimen, over which they fade.
+   */
+  render(cam: Camera, spheres: Float32Array, sphereCount: number, lines: Float32Array, lineVerts: number, ground: Vec3, fluorescence?: { depth: number }): void {
     this.resize();
     const uniform = new Float32Array(28);
     uniform.set(this.viewProj(cam), 0);
     uniform.set(this.eye(cam), 16);
     uniform.set([0.35, 0.85, 0.4, 0], 20);
     uniform.set(ground, 24);
+    if (fluorescence) {
+      uniform[19] = fluorescence.depth;                    // eye.a: distance over which bodies fade
+      uniform[23] = cam.dist - fluorescence.depth / 2;     // light.a: where the fade starts
+      uniform[27] = 1;                                     // ground.a: fluorescence on
+    }
     this.device.queue.writeBuffer(this.frame, 0, uniform);
     this.instances = this.fit(this.instances, sphereCount * 4 * SPHERE_STRIDE);
     this.device.queue.writeBuffer(this.instances, 0, spheres, 0, sphereCount * SPHERE_STRIDE);
@@ -230,9 +243,11 @@ export class Scene {
       depthStencilAttachment: { view: this.depth.createView(), depthClearValue: 1, depthLoadOp: 'clear', depthStoreOp: 'discard' },
     });
     pass.setBindGroup(0, this.bind);
-    pass.setPipeline(this.shadows);
-    pass.setVertexBuffer(0, this.instances);
-    pass.draw(6, sphereCount);
+    if (!fluorescence) {
+      pass.setPipeline(this.shadows);
+      pass.setVertexBuffer(0, this.instances);
+      pass.draw(6, sphereCount);
+    }
     pass.setPipeline(this.spheres);
     pass.setVertexBuffer(0, this.mesh);
     pass.setVertexBuffer(1, this.instances);

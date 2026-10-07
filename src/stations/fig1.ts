@@ -1,7 +1,7 @@
 // Fig 1: the wound closes in a day, and the neurons are carried there in straight lines.
 // The visitor watches the paper's simulation beside the real time-lapse and follows neurons.
 
-import { Kind } from '../contracts';
+import { Kind, type Vec3 } from '../contracts';
 import { SPEED_UP } from '../app/game';
 import type { Point } from '../app/record';
 import { COLOURS } from '../app/view';
@@ -15,6 +15,9 @@ const MOST = 8;
 
 export class Fig1 extends Watch implements Station {
   fig = 1;
+  extent = 1150;
+  centre: Vec3 = [-40, 0, 20];
+  scale = { length: 100, label: '100 µm in the model', note: '≈ 25 µm in the fish' };
   tagline = ['A wound in the brain,', 'shut within a day.', 'Follow a neuron and see how.'];
   help = 'Click a neuron to follow it. Drag the clock back and forth.';
   fine = `The tissue is the paper's computer model, started from the cell layout of its Fig. 4A with all its microglia pulling. The film is a real larva. The model is about four times larger than the real tissue and time runs ${Math.round(SPEED_UP)} times faster than life. The exponent says how distance grows with time: 1 for a cell wandering at random, 2 for one carried in a straight line at steady speed. The model's wound closes steadily; the real one waits, then closes, then stops. The model does not capture that.`;

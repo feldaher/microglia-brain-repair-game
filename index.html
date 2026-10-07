@@ -20,7 +20,13 @@
     <p class="tagline" id="tagline"></p>
     <div class="key">
       <div class="key-head"><span class="label">Key</span></div>
-      <ul id="legend">
+      <ul data-fig="0">
+        <li class="key-item"><i style="--c:#a9e8bf"></i>Neuron nuclei</li>
+        <li class="key-item"><i style="--c:#ff5468"></i>Microglia</li>
+        <li class="key-item"><i style="--c:#e9fff0"></i>Skin nuclei</li>
+        <li class="key-item"><i class="track" style="background:#ff5468"></i>What a microglia holds</li>
+      </ul>
+      <ul id="legend" data-fig="1 3 4">
         <li class="key-item"><i style="--c:#e0a52c"></i>You, a microglia</li>
         <li class="key-item"><i style="--c:#d98a72"></i>Neurons</li>
         <li class="key-item"><i style="--c:#2f8f80"></i>Microglia, pulling</li>
@@ -86,7 +92,16 @@
       <button id="reveal" class="btn" disabled>Reveal</button>
     </div>
 
-    <div class="group">
+    <div class="group" data-fig="0">
+      <div class="slider-head"><span class="label">Microglia</span><output id="t3-count-out">12</output></div>
+      <input type="range" id="t3-count" min="0" max="40" step="1" value="12" aria-label="Number of microglia" />
+      <div class="slider-head"><span class="label">They shorten their hold by</span><output id="t3-pull-out">0%</output></div>
+      <input type="range" id="t3-pull" min="0" max="70" step="1" value="0" aria-label="How much each microglia shortens its hold, percent" />
+      <div class="ends"><em>holding</em><em>pulling hard</em></div>
+      <button id="t3-reset" class="btn">Start again</button>
+    </div>
+
+    <div class="group" data-fig="1 3 4">
       <div class="row"><button id="labels-btn" class="btn grow toggle on" aria-pressed="true" title="Labels (L)"><span class="switch"></span>Labels</button></div>
     </div>
   </aside>
@@ -98,12 +113,17 @@
       <div><span class="label">Pulling</span><b id="s-pull">0</b><i id="s-of">of 19 microglia</i></div>
       <div><span class="label">Clock</span><b id="s-hpi">4.0</b><i>hours after injury</i></div>
     </div>
+    <div class="stats three" data-fig="0">
+      <div><span class="label">Wound closed</span><b id="t3-closed">0</b><i>% of its volume</i></div>
+      <div><span class="label">Nuclei</span><b id="t3-nuclei">—</b><i>pinned in the tissue</i></div>
+      <div><span class="label">Physics</span><b id="t3-ms">—</b><i>ms per frame</i></div>
+    </div>
     <div class="plot" id="plot1" data-fig="1"></div>
     <div class="plot" id="plot3" data-fig="3"></div>
     <details class="fine-box"><summary>What is the paper's here, and what is not</summary><p class="fine" id="fine"></p></details>
   </section>
 
-  <div class="scalebar" id="scalebar" aria-label="Scale bar"><i></i><span>100 µm in the model</span><em>≈ 25 µm in the fish</em></div>
+  <div class="scalebar" id="scalebar" aria-label="Scale bar"><i></i><span id="scale-label">100 µm in the model</span><em id="scale-note">≈ 25 µm in the fish</em></div>
 
   <div class="side-stack">
     <aside class="card" id="movie" hidden>

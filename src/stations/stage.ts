@@ -24,8 +24,15 @@ export interface Station {
   tagline: string[];
   help: string;
   fine: string;
-  /** The run on screen, for the labels. */
-  game(): Game;
+  /** The run on screen, for the labels; null where there are none. */
+  game(): Game | null;
+  /** What the camera frames: the width of the specimen (µm) and its centre in the scene. */
+  extent: number;
+  centre: Vec3;
+  /** Length of the scale bar (µm) and what is written under it. */
+  scale: { length: number; label: string; note: string };
+  /** True where dragging turns the specimen instead of pointing at it. */
+  orbit?: boolean;
   enter(): void;
   leave(): void;
   /** Advances and draws one frame; `dt` and `now` are seconds. */
