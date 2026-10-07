@@ -1,10 +1,10 @@
 # Close the Wound
 
-A playable version of the computer model in El-Daher et al. 2024, "Microglia are essential for tissue contraction in wound closure after brain injury in zebrafish larvae", *Life Science Alliance* 8:e202403052 ([doi:10.26508/lsa.202403052](https://doi.org/10.26508/lsa.202403052)).
+A paper you can walk through and play: El-Daher et al. 2024, "Microglia are essential for tissue contraction in wound closure after brain injury in zebrafish larvae", *Life Science Alliance* 8:e202403052 ([doi:10.26508/lsa.202403052](https://doi.org/10.26508/lsa.202403052)).
 
-You are one microglia in a slice of injured zebrafish brain. Click to crawl, press Space to pull, press C to call other microglia. Twenty hours (4 to 24 hours after injury) pass in one minute, and a thin line follows each neuron from where it started. One cell barely moves the tissue; nineteen close the wound.
+**The story** (the page you land on) tells the paper in chapters on one piece of brain in three dimensions. The camera flies from chapter to chapter; where it stops you can turn the tissue, open the labels in it for what the paper measured there, and at the last stop add microglia and make them pull. Four chapters are built: the larva, one lobe of the tectum, the wound (Fig 1, with a panel of Fig 1C lying beside the tissue at the same scale), and who closes it (Fig 4). Next, Back, the numbered dots, the arrow keys or the digits move through it. The tissue of the story is ours and not yet calibrated against the paper; every panel says so. Design: `../outputs/design/2026-10-07_journey-architecture.md`; the projects it learns from: `../outputs/literature/2026-10-07_immersive-3d-web-precedents.md`.
 
-The piece is being built as seven stations, one per main figure of the paper. The strip at the top lists them. Three are built:
+**The stations** are the paper's seven main figures, one each, in the strip at the top. In the Fig 4 station you are one microglia in a slice of injured zebrafish brain: click to crawl, press Space to pull, press C to call other microglia. Twenty hours (4 to 24 hours after injury) pass in one minute, and a thin line follows each neuron from where it started. One cell barely moves the tissue; nineteen close the wound. Three stations are built:
 
 - **Fig 1**: the paper's simulation beside the real time-lapse, in step. Click neurons to follow them; their displacement exponent is shown beside the 1.86 measured in fish, and the model's closure curve beside the measured one.
 - **Fig 3**: the microglia are hidden. Mark where the neurons' tracks are heading, then reveal who is there. The timing of gathering and closure is plotted against Fig 3I.
@@ -12,7 +12,7 @@ The piece is being built as seven stations, one per main figure of the paper. Th
 
 The other four open a card with the finding and a panel of the figure.
 
-**3D tissue (preview).** The last button of the strip opens the tissue the figures are being moved onto: one lobe of the optic tectum as a single soft body, with about 10,000 neuron nuclei pinned inside it, the pin's track through it, and microglia that hold the tissue within reach and shorten their hold. It uses Jelly Cells' tetrahedral mesher and XPBD solver (`src/soft/`), run in a soft regime where the result does not depend on the number of substeps. Dimensions are measured on Fig 1C; nothing is calibrated yet. Design: `../outputs/design/2026-10-06_3d-tissue.md`. Labels in the scene open cards with the paper's numbers and images.
+**3D tissue (sandbox).** The last button of the strip opens the tissue of the story by itself, with its sliders and the cost of its physics: one lobe of the optic tectum as a single soft body, with about 10,000 neuron nuclei pinned inside it, the pin's track through it, and microglia that hold the tissue within reach and shorten their hold. It uses Jelly Cells' tetrahedral mesher and XPBD solver (`src/soft/`), run in a soft regime where the result does not depend on the number of substeps. Dimensions are measured on Fig 1C; nothing is calibrated yet. Design: `../outputs/design/2026-10-06_3d-tissue.md`. Labels in the scene open cards with the paper's numbers and images.
 
 Lengths are the model's: its tissue is about four times larger than the real one (see `../outputs/analysis/2026-10-05_port-against-fig1-fig3.md`).
 
@@ -41,7 +41,9 @@ It needs a browser with WebGPU: current Chrome or Edge, Safari 18+, or Firefox w
 
 | | |
 |---|---|
-| Click or drag on the tissue | Your cell crawls there, at the model's 3 µm/min |
+| `→` `←` · `1`–`4` | The story: next and back · straight to a chapter |
+| Drag · scroll or pinch | The story, at a stop: turn the tissue · come closer |
+| Click or drag on the tissue | Fig 4: your cell crawls there, at the model's 3 µm/min |
 | `Space` | Pull / let go |
 | `C` | Call the nearest idle microglia |
 | `P` · `R` · `L` · `?` | Pause · start again · labels · the welcome screen |
@@ -53,8 +55,9 @@ It needs a browser with WebGPU: current Chrome or Edge, Safari 18+, or Firefox w
 - `src/model/`: the model, with no rendering in it. `step.ts` is one mechanics step; `params.ts` the constants with their sources; `fig4a.ts` the layout as lattice indices; `measure.ts` the wound area and repair index.
 - `src/app/game.ts`: the run as a state machine (clock, the visitor's cell, who pulls). `record.ts` keeps a frame every 15 minutes and makes the measurements of Figs 1 and 3 on it; `replay.ts` plays and scrubs it. `view.ts` turns a run into spheres and lines.
 - `src/soft/`: the soft-body engine, adapted from Jelly Cells. `src/tissue/`: the tectum's shape with its sources, the nuclei, the microglia's hold, the measure of the wound.
-- `src/stations/`: one module per figure. `src/teach/`: the cards, the stations' texts and the curves read off the paper's figures. `src/ui/plot.ts`: the line chart.
-- `src/render/scene.ts`: WebGPU. Instanced spheres, their shadows, and lines for the traction web and the wound box.
+- `src/journey/`: the story, with no page and no GPU in it. `types.ts` is its contract (a chapter is data: a shot, captions, hotspots, a stop); `director.ts` the state machine that knows the chapter, the line and whose the camera is; `camera.ts` the flight between two shots and the framing of a shot in any window. `src/teach/chapters.ts` holds the chapters, each number with its page.
+- `src/stations/`: one module per figure, plus `journey.ts` (the story) and `tissueview.ts` (the 3D tissue on screen, shared by the story and the sandbox). `src/teach/`: the cards, the stations' texts and the curves read off the paper's figures. `src/ui/plot.ts`: the line chart; `src/ui/hotspots.ts`: the labels that ride on points of the 3D tissue.
+- `src/render/scene.ts`: WebGPU. Instanced spheres, their shadows, lines for the traction web and the wound box, flat pictures (the paper's micrographs in the scene), and a last pass for depth of field and glow, which is a plain copy where neither is asked for. `src/render/camera.ts`: the camera's maths, GPU-free.
 - `features/*.feature` specify the behaviour; `tests/` run them.
 
 The stack, the page shell and the stylesheet come from [Jelly Cells](https://feldaher.github.io/jelly-cells/).

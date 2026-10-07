@@ -47,6 +47,7 @@ export class Labels {
     const card = { name, size, blurb, figure, colour };
     this.open = null;
     $('card-kind').hidden = false;
+    $('card-more').hidden = true;
     $('card').hidden = false;
     $('card').style.setProperty('--c', card.colour);
     $('card-name').textContent = card.name;

@@ -6,7 +6,7 @@ Feature: A welcome screen
     Given the page markup
     Then the welcome is a dialog with a title and a start button
     And it says the visitor is a microglia in a wounded zebrafish brain
-    And it tells the visitor they can crawl, pull and call
+    And it tells the visitor they can follow the story, look around, open the labels and try the experiment
     And it is short: under 120 words
     And a button on the page opens it again
 

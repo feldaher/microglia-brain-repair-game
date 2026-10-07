@@ -2,12 +2,16 @@ import './style.css';
 import type { Vec3 } from './contracts';
 import type { Point } from './app/record';
 import { COLOURS } from './app/view';
+import { frame as frameShot } from './journey/camera';
+import type { Viewport } from './journey/types';
 import { invert, transformPoint } from './math/mat4';
 import { Scene, type Camera } from './render/scene';
 import { Fig1 } from './stations/fig1';
 import { Fig3 } from './stations/fig3';
 import { Fig4 } from './stations/fig4';
+import { Journey } from './stations/journey';
 import { Tissue3d } from './stations/tissue3d';
+import { TissueView } from './stations/tissueview';
 import { $, type Stage, type Station } from './stations/stage';
 import { MODEL_KIND, STATIONS } from './teach/stations';
 import { Labels } from './ui/labels';
@@ -38,16 +42,23 @@ async function main() {
 
   const cam: Camera = { target: [-40, 0, 20], dist: 2100, yaw: 0, pitch: 1.02 };
   const labels = new Labels();
-  /** How far the visitor has zoomed, before the fit to the window. */
-  let zoom = 1;
   let started = false;
   const welcome = initWelcome(() => { started = true; });
-  const stage: Stage = { scene, cam, labels, ground, held: () => !started || welcome.open };
+  /** The window, and the part of it the page's text leaves free for the station on screen. */
+  const viewport = (): Viewport => {
+    const w = canvas.clientWidth, h = canvas.clientHeight, wide = w > 900;
+    // Free area: right of the title column and left of the panel on a wide window; the top 55% on a narrow one.
+    const usual = { left: wide ? Math.min(470, 0.33 * w) : 0, right: wide ? 290 : 0, top: 0, bottom: wide ? 0 : 0.45 * h };
+    return { width: w, height: h, ...(station.margins?.(w, h) ?? usual) };
+  };
+  const stage: Stage = { scene, cam, labels, ground, held: () => !started || welcome.open, zoom: 1, viewport };
 
   // ----- the stations; one is on screen at a time
-  // 0 is the preview of the 3D tissue, which the figures will move onto.
-  const built = new Map<number, Station>([[0, new Tissue3d(stage)], [1, new Fig1(stage)], [3, new Fig3(stage)], [4, new Fig4(stage)]]);
-  let station: Station = built.get(4)!;
+  // -1 is the journey through the paper on the 3D tissue; 0 the sandbox of that tissue.
+  const tissue = new TissueView();
+  const journey = new Journey(stage, tissue);
+  const built = new Map<number, Station>([[-1, journey], [0, new Tissue3d(stage, tissue)], [1, new Fig1(stage)], [3, new Fig3(stage)], [4, new Fig4(stage)]]);
+  let station: Station = journey;
   const buttons = new Map<number, HTMLButtonElement>();
   function show(next: Station) {
     station.leave();
@@ -55,17 +66,25 @@ async function main() {
     labels.close();
     for (const el of document.querySelectorAll<HTMLElement>('[data-fig]')) el.hidden = !el.dataset.fig!.split(' ').includes(String(next.fig));
     for (const [fig, b] of buttons) b.classList.toggle('here', fig === next.fig);
-    $('fig-n').textContent = next.fig ? `fig. ${next.fig}` : 'preview';
+    $('fig-n').textContent = next.id ?? (next.fig ? `fig. ${next.fig}` : 'preview');
     $('tagline').innerHTML = next.tagline.join('<br />');
     $('help').textContent = next.help;
     $('fine').textContent = next.fine;
     $('scale-label').textContent = next.scale.label;
     $('scale-note').textContent = next.scale.note;
     cam.yaw = 0; cam.pitch = next.orbit ? 0.9 : 1.02;
-    fit();
+    stage.zoom = 1;
     next.enter();
-    try { history.replaceState(null, '', next.fig ? `#fig${next.fig}` : '#tissue'); } catch { /* a sandboxed page: no address to keep */ }
+    fit();
+    try { history.replaceState(null, '', `#${next.id ?? (next.fig ? `fig${next.fig}` : 'tissue')}`); } catch { /* a sandboxed page: no address to keep */ }
   }
+  // The journey comes first in the strip; the figures and the sandbox follow.
+  const story = document.createElement('button');
+  story.textContent = 'The story';
+  story.title = 'The paper told in chapters, on the 3D tissue';
+  story.addEventListener('click', () => { if (station !== journey) show(journey); });
+  $('stations').append(story);
+  buttons.set(-1, story);
   for (const s of STATIONS) {
     const b = document.createElement('button'), mine = built.get(s.fig);
     b.textContent = `Fig ${s.fig}`;
@@ -87,7 +106,11 @@ async function main() {
   $('stations').append(preview);
   buttons.set(0, preview);
 
-  show(location.hash === '#tissue' ? built.get(0)! : built.get(Number(/^#fig(\d)$/.exec(location.hash)?.[1]) || 4) ?? station);
+  /** The station an address names; the journey where it names none. */
+  const named = (): Station => (location.hash === '#tissue' ? built.get(0)! : built.get(Number(/^#fig(\d)$/.exec(location.hash)?.[1])) ?? journey);
+  show(named());
+  // A link in a card can name another station.
+  window.addEventListener('hashchange', () => { const next = named(); if (next !== station) show(next); });
 
   window.addEventListener('keydown', (e) => {
     if (welcome.open || e.metaKey || e.ctrlKey) return;
@@ -109,9 +132,31 @@ async function main() {
   let dragging = false;
   const point = (e: PointerEvent) => { const p = pointAt(e); if (p) station.point(p); };
   let lastX = 0, lastY = 0;
-  canvas.addEventListener('pointerdown', (e) => { dragging = true; lastX = e.clientX; lastY = e.clientY; canvas.setPointerCapture(e.pointerId); if (!station.orbit) point(e); });
+  /** Fingers on the tissue, and how far apart two of them were: a pinch zooms. */
+  const fingers = new Map<number, { x: number; y: number }>();
+  let spread = 0;
+  const apart = () => { const [a, b] = [...fingers.values()]; return Math.hypot(a.x - b.x, a.y - b.y); };
+  const lift = (e: PointerEvent) => { dragging = false; fingers.delete(e.pointerId); };
+  const zoomBy = (factor: number) => {
+    station.grab?.();
+    stage.zoom = Math.min(1.5, Math.max(0.3, stage.zoom * factor));
+    fit();
+  };
+  canvas.addEventListener('pointerdown', (e) => {
+    fingers.set(e.pointerId, { x: e.clientX, y: e.clientY });
+    if (fingers.size === 2) { spread = apart(); return; }
+    dragging = true; lastX = e.clientX; lastY = e.clientY; canvas.setPointerCapture(e.pointerId);
+    if (station.orbit) station.grab?.(); else point(e);
+  });
   // Dragging turns the 3D tissue, steers a cell in Fig 4; elsewhere a press picks one thing, so only the press counts.
   canvas.addEventListener('pointermove', (e) => {
+    if (fingers.has(e.pointerId)) fingers.set(e.pointerId, { x: e.clientX, y: e.clientY });
+    if (fingers.size === 2) {
+      const now = apart();
+      if (spread > 0 && now > 0) zoomBy(spread / now);
+      spread = now;
+      return;
+    }
     if (!dragging) return;
     if (station.orbit) {
       cam.yaw -= (e.clientX - lastX) * 0.006;
@@ -119,25 +164,16 @@ async function main() {
       lastX = e.clientX; lastY = e.clientY;
     } else if (station.fig === 4) point(e);
   });
-  canvas.addEventListener('pointerup', () => { dragging = false; });
-  canvas.addEventListener('pointercancel', () => { dragging = false; });
+  canvas.addEventListener('pointerup', lift);
+  canvas.addEventListener('pointercancel', lift);
 
   // ----- framing: the tissue sits in the part of the window the text leaves free
   function fit() {
-    const w = canvas.clientWidth, h = canvas.clientHeight, wide = w > 900;
-    // Free area: right of the title column and left of the panel on a wide window; the top 55% on a narrow one.
-    const left = wide ? Math.min(470, 0.33 * w) : 0, right = wide ? 290 : 0, bottom = wide ? 0 : 0.45 * h;
-    const freeW = w - left - right, freeH = h - bottom;
-    // µm of specimen per pixel so that it fits the free area; the view is 32° tall.
-    const perPixel = station.extent / Math.min(freeW, 1.15 * freeH);
-    cam.dist = zoom * (perPixel * h) / (2 * Math.tan((16 * Math.PI) / 180));
-    const shift = (left - right) / 2, lift = bottom / 2;
-    cam.target = [station.centre[0] - shift * perPixel * zoom, station.centre[1], station.centre[2] + lift * perPixel * zoom / Math.sin(cam.pitch)];
+    Object.assign(cam, frameShot({ centre: station.centre, extent: station.extent * stage.zoom, yaw: cam.yaw, pitch: cam.pitch }, viewport()));
   }
   canvas.addEventListener('wheel', (e) => {
     e.preventDefault();
-    zoom = Math.min(1.5, Math.max(0.3, zoom * Math.exp(e.deltaY * 0.001)));
-    fit();
+    zoomBy(Math.exp(e.deltaY * 0.001));
   }, { passive: false });
   window.addEventListener('resize', fit);
   fit();

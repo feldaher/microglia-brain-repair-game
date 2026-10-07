@@ -27,8 +27,8 @@ describeFeature(feature, ({ Scenario }) => {
     And('it says the visitor is a microglia in a wounded zebrafish brain', () => {
       for (const w of [/microglia/i, /zebrafish/i, /wound/i, /brain/i]) expect(text).toMatch(w);
     });
-    And('it tells the visitor they can crawl, pull and call', () => {
-      for (const w of [/\bcrawl\b/i, /\bpull\b/i, /\bcall\b/i]) expect(text).toMatch(w);
+    And('it tells the visitor they can follow the story, look around, open the labels and try the experiment', () => {
+      for (const w of [/\bfollow\b/i, /\blook\b/i, /\bopen\b/i, /\btry\b/i]) expect(text).toMatch(w);
     });
     And('it is short: under 120 words', () => expect(text.split(' ').length).toBeLessThan(120));
     And('a button on the page opens it again', () => expect(html).toMatch(/<button[^>]*id="welcome-open"/));

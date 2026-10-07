@@ -11,8 +11,9 @@
   <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Ccircle cx='10' cy='20' r='7' fill='%23d98a72'/%3E%3Ccircle cx='22' cy='11' r='7' fill='%23e0a52c'/%3E%3C/svg%3E" />
 </head>
 <body>
-  <canvas id="stage" aria-label="A slice of injured brain tissue. Your cell is the yellow one."></canvas>
+  <canvas id="stage" aria-label="A piece of injured brain tissue, in three dimensions."></canvas>
   <div id="labels" aria-label="Labels"></div>
+  <div id="hotspots" aria-label="Labels in the tissue"></div>
 
   <header class="title">
     <p class="eyebrow">Paper Studies / El-Daher et al. 2024 <button id="welcome-open" class="about" aria-haspopup="dialog" title="What is this? (?)">About</button></p>
@@ -20,7 +21,7 @@
     <p class="tagline" id="tagline"></p>
     <div class="key">
       <div class="key-head"><span class="label">Key</span></div>
-      <ul data-fig="0">
+      <ul data-fig="0 -1">
         <li class="key-item"><i style="--c:#a9e8bf"></i>Neuron nuclei</li>
         <li class="key-item"><i style="--c:#ff5468"></i>Microglia</li>
         <li class="key-item"><i style="--c:#e9fff0"></i>Skin nuclei</li>
@@ -106,8 +107,24 @@
     </div>
   </aside>
 
-  <section class="readout">
-    <p class="help" id="help"></p>
+  <section class="readout" id="readout">
+    <div class="story" data-fig="-1">
+      <p class="label" id="j-where"></p>
+      <p class="caption" id="j-caption" aria-live="polite"></p>
+      <div class="story-nav">
+        <button id="j-back" class="btn" title="Back (←)">Back</button>
+        <div class="dots" id="j-dots" role="group" aria-label="Chapters"></div>
+        <button id="j-next" class="btn" title="Next (→)">Next</button>
+      </div>
+      <div class="story-try" id="j-experiment" hidden>
+        <div class="slider-head"><span class="label">Microglia</span><output id="j-count-out">12</output></div>
+        <input type="range" id="j-count" min="0" max="40" step="1" value="12" aria-label="Number of microglia" />
+        <div class="slider-head"><span class="label">They shorten their hold by</span><output id="j-pull-out">0%</output></div>
+        <input type="range" id="j-pull" min="0" max="70" step="1" value="0" aria-label="How much each microglia shortens its hold, percent" />
+        <p class="story-stat"><b id="j-closed">0</b>% of the wound's volume closed <i>· not calibrated</i></p>
+      </div>
+    </div>
+    <p class="help" id="help" data-fig="0 1 3 4"></p>
     <div class="stats three" data-fig="4">
       <div><span class="label">Wound closed</span><b id="s-ri">0</b><i>% of the box</i></div>
       <div><span class="label">Pulling</span><b id="s-pull">0</b><i id="s-of">of 19 microglia</i></div>
@@ -145,6 +162,7 @@
       </figure>
       <p id="card-blurb"></p>
       <p class="card-kind" id="card-kind" hidden></p>
+      <a class="card-more" id="card-more" hidden></a>
     </aside>
   </div>
 
@@ -163,14 +181,14 @@
   <dialog class="welcome" id="welcome" aria-labelledby="welcome-title">
     <p class="eyebrow">Paper Studies / El-Daher et al. 2024</p>
     <h2 id="welcome-title">Close the Wound.</h2>
-    <p class="welcome-lead">A needle has gone through the brain of a young zebrafish. In a day the wound will be shut: not by new cells, but by the brain's immune cells, the microglia, pulling the tissue together. You are one of them.</p>
+    <p class="welcome-lead">A needle has gone through the brain of a young zebrafish. In a day the wound will be shut: not by new cells, but by the brain's immune cells, the microglia, pulling the tissue together. This is how the paper found out.</p>
     <ul class="welcome-do">
-      <li><b>Crawl</b>Click the tissue and your yellow cell goes there.</li>
-      <li><b>Pull</b>Press Space to hold on. The tissue creeps toward you.</li>
-      <li><b>Call</b>Press C to bring in another microglia. One is not enough.</li>
-      <li><b>Look</b>Twenty hours pass in a minute. Click a label for the real thing.</li>
+      <li><b>Follow</b>Press Next, or the right arrow, to go through the story.</li>
+      <li><b>Look</b>Where the camera stops, drag to turn the tissue.</li>
+      <li><b>Open</b>Labels in the tissue open what the paper measured.</li>
+      <li><b>Try</b>At the last stop, add microglia and make them pull.</li>
     </ul>
-    <div class="welcome-foot"><button id="welcome-start" class="welcome-start" autofocus>Start pulling</button><span>The tissue moves by the model from the paper.</span></div>
+    <div class="welcome-foot"><button id="welcome-start" class="welcome-start" autofocus>Begin</button><span>The figures of the paper are in the strip at the top.</span></div>
   </dialog>
 
   <div class="fallback" id="fallback" hidden>
